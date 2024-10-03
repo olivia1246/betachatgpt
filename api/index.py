@@ -1,7 +1,5 @@
-from flask import Flask, request, jsonify, render_template_string, send_file
-from gtts import gTTS
+from flask import Flask, request, jsonify, render_template_string
 from g4f.client import Client
-import os
 
 app = Flask(__name__)
 
@@ -26,32 +24,28 @@ HTML_TEMPLATE = '''
         <br>
         <button id="ask-button" onclick="sendMessage()">Ask</button>
         <br>
-        <audio id="tts-audio" controls style="display:none;"></audio> <!-- Hidden TTS Audio Player -->
+        <audio id="tts-audio" controls style=""></audio>
         <div class="footer">
             <p><a href="/login">Log In</a>        <a href="/signup">Sign Up</a>        <a href="/preferences">Preferences</a>        <a href="http://frogfind.com/read.php?a=https://en.wikipedia.org/wiki/ChatGPT">About Us</a></p>
             <p>ChatGPT 1.0 is still in beta and may make mistakes. Please consider double-checking important information.</p>
-            <p>&copy; 2006 OpenAI - Created by <a href="https://www.youtube.com/watch?v=IfTBofqT9Kw&t=1s">Faked Vault</a> - Recreation by <a href="https://github.com/olivia1246">olivia1246</a></p>
+            <p>&copy; 2006 OpenAI - Created by <a href="https://www.youtube.com/watch?v=IfTBofqT9Kw&t=1s">Faked Vault</a> - Recreation by <a href="https://github.com/olivia1246">olivia1246</a> - Voice by <a href="https://www.tetyys.com/SAPI4/">SAPI4</a></p>
         </div>
   </center>
         
     <script>
         // Initialize the chat box with an empty message
         document.getElementById('chat-box').value = "";
-
         function sendMessage() {
             var input = document.getElementById('user-input').value;
             if (!input) return;
-
             // Clear the chat box and set the "Generating..." message
             var chatBox = document.getElementById('chat-box');
             chatBox.value = "";  // Clear previous conversation
             chatBox.value += "Generating...\\n";
-
             // Disable the button and change the text to "Generating..."
             var askButton = document.getElementById('ask-button');
             askButton.disabled = true;
             askButton.textContent = "Generating...";
-
             // Send the user input to the server
             fetch('/chat', {
                 method: 'POST',
@@ -66,20 +60,15 @@ HTML_TEMPLATE = '''
                 chatBox.value = data.response + "\\n";  // Append the bot's response
                 document.getElementById('user-input').value = '';  // Clear the user input
                 chatBox.scrollTop = chatBox.scrollHeight;  // Scroll to the bottom of the chat
-
                 // Reset the button to "Ask" and enable it
                 askButton.textContent = "Ask";
                 askButton.disabled = false;
-
-                // Play the response using gTTS (TTS audio)
-                fetch('/tts?text=' + encodeURIComponent(data.response))
-                .then(response => response.blob())
-                .then(blob => {
-                    var ttsAudio = document.getElementById('tts-audio');
-                    var url = URL.createObjectURL(blob);
-                    ttsAudio.src = url;
-                    ttsAudio.style.display = 'block';  // Show the audio player
-                });
+                // Play the response using SAPI4
+                var ttsAudio = document.getElementById('tts-audio');
+                var ttsUrl = `https://www.tetyys.com/SAPI4/SAPI4?text=${encodeURIComponent(text)}&voice=Adult%20Male%20%232%2C%20American%20English%20(TruVoice)&pitch=140&speed=157`;
+                ttsAudio.src = ttsUrl;
+                ttsAudio.style.display = 'block';  // Show the audio player
+                ttsAudio.play();
             })
             .catch(error => {
                 // Handle any errors
@@ -123,18 +112,6 @@ def chat():
     # Extract the response content
     bot_response = response.choices[0].message.content
     return jsonify({'response': bot_response})
-
-@app.route('/tts', methods=['GET'])
-def tts():
-    text = request.args.get('text')
-
-    # Use gTTS to generate the audio file
-    tts = gTTS(text=text, lang='en')
-    tts_file = "response.mp3"
-    tts.save(tts_file)
-
-    # Serve the generated mp3 file
-    return send_file(tts_file, as_attachment=False, mimetype='audio/mpeg')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
