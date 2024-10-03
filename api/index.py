@@ -13,7 +13,6 @@ HTML_TEMPLATE = '''
 </head>
 <body>
   <center>
-        <img width="128" alt="ChatGPT-Logo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/ChatGPT-Logo.svg/128px-ChatGPT-Logo.svg.png"></a>
         <h1>ChatGPT 1.0</h1>
         <p>How can I help you today?</p>
         <textarea id="chat-box" rows="10" cols="80" readonly></textarea>
@@ -24,9 +23,8 @@ HTML_TEMPLATE = '''
         <br>
         <button id="ask-button" onclick="sendMessage()">Ask</button>
         <div class="footer">
-            <p><a href="/login">Log In</a>        <a href="/signup">Sign Up</a>        <a href="/preferences">Preferences</a>        <a href="http://frogfind.com/read.php?a=https://en.wikipedia.org/wiki/ChatGPT">About Us</a></p>
             <p>ChatGPT 1.0 is still in beta and may make mistakes. Please consider double-checking important information.</p>
-            <p>&copy; 2006 OpenAI - Created by <a href="https://www.youtube.com/watch?v=IfTBofqT9Kw&t=1s">Faked Vault</a> - Recreation by <a href="https://github.com/olivia1246">olivia1246</a></p>
+            <p>&copy; 2006 OpenAI - Created by Faked Vault</p>
         </div>
   </center>
         
@@ -38,23 +36,15 @@ HTML_TEMPLATE = '''
             var input = document.getElementById('user-input').value;
             if (!input) return;
 
-  // Disable the button and enable it after 10 seconds with countdown
+            // Clear input after submission
+            document.getElementById('user-input').value = '';
+
+            // Disable the button and change text to "Generating..."
             var askButton = document.getElementById('ask-button');
             askButton.disabled = true;
+            askButton.textContent = "Generating...";
 
-            var countdown = 20;
-            askButton.textContent = `Ask (${countdown})`; // Initial display with countdown
-
-            var interval = setInterval(function() {
-                countdown--;
-                askButton.textContent = `Ask (${countdown})`; // Update countdown
-                if (countdown <= 0) {
-                    clearInterval(interval);
-                    askButton.textContent = "Ask";
-                    askButton.disabled = false;
-                }
-            }, 1000); // Update every second
-
+            // Fetch response from the server
             fetch('/chat', {
                 method: 'POST',
                 headers: {
@@ -65,10 +55,12 @@ HTML_TEMPLATE = '''
             .then(response => response.json())
             .then(data => {
                 var chatBox = document.getElementById('chat-box');
-                chatBox.value += "You: " + input + "\\n";
-                chatBox.value += "ChatGPT: " + data.response + "\\n";
-                document.getElementById('user-input').value = '';
+                chatBox.value += data.response + "\\n";
                 chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom
+                
+                // Re-enable the button and reset text to "Ask"
+                askButton.textContent = "Ask";
+                askButton.disabled = false;
             });
         }
     </script>
