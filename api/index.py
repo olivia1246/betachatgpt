@@ -17,7 +17,7 @@ HTML_TEMPLATE = '''
 <body>
   <center>
         <img width="128" alt="ChatGPT-Logo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/ChatGPT-Logo.svg/128px-ChatGPT-Logo.svg.png">
-        <h2>ChatGPT 1.0</h2>
+        <h1>ChatGPT 1.0</h1>
         <p>How can I help you today?</p>
         <textarea id="chat-box" rows="10" cols="80" disabled></textarea>
         <br>
