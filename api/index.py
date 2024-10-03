@@ -1,5 +1,7 @@
-from flask import Flask, request, jsonify, render_template_string
+from flask import Flask, request, jsonify, render_template_string, send_file
+from gtts import gTTS
 from g4f.client import Client
+import os
 
 app = Flask(__name__)
 
@@ -24,7 +26,7 @@ HTML_TEMPLATE = '''
         <br>
         <button id="ask-button" onclick="sendMessage()">Ask</button>
         <br>
-        <audio id="tts-audio" controls style=""></audio>
+        <audio id="tts-audio" controls style="display:none;"></audio> <!-- Hidden TTS Audio Player -->
         <div class="footer">
             <p><a href="/login">Log In</a>        <a href="/signup">Sign Up</a>        <a href="/preferences">Preferences</a>        <a href="http://frogfind.com/read.php?a=https://en.wikipedia.org/wiki/ChatGPT">About Us</a></p>
             <p>ChatGPT 1.0 is still in beta and may make mistakes. Please consider double-checking important information.</p>
@@ -69,12 +71,15 @@ HTML_TEMPLATE = '''
                 askButton.textContent = "Ask";
                 askButton.disabled = false;
 
-                // Play the response using Google TTS
-                var ttsAudio = document.getElementById('tts-audio');
-                var ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=en&client=tw-ob&q=${encodeURIComponent(data.response)}`;
-                ttsAudio.src = ttsUrl;
-                ttsAudio.style.display = 'block';  // Show the audio player
-                ttsAudio.play();
+                // Play the response using gTTS (TTS audio)
+                fetch('/tts?text=' + encodeURIComponent(data.response))
+                .then(response => response.blob())
+                .then(blob => {
+                    var ttsAudio = document.getElementById('tts-audio');
+                    var url = URL.createObjectURL(blob);
+                    ttsAudio.src = url;
+                    ttsAudio.style.display = 'block';  // Show the audio player
+                });
             })
             .catch(error => {
                 // Handle any errors
@@ -118,6 +123,18 @@ def chat():
     # Extract the response content
     bot_response = response.choices[0].message.content
     return jsonify({'response': bot_response})
+
+@app.route('/tts', methods=['GET'])
+def tts():
+    text = request.args.get('text')
+
+    # Use gTTS to generate the audio file
+    tts = gTTS(text=text, lang='en')
+    tts_file = "response.mp3"
+    tts.save(tts_file)
+
+    # Serve the generated mp3 file
+    return send_file(tts_file, as_attachment=False, mimetype='audio/mpeg')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
