@@ -67,8 +67,6 @@ HTML_TEMPLATE = '''
                 var ttsAudio = document.getElementById('tts-audio');
                 var ttsUrl = `https://www.tetyys.com/SAPI4/SAPI4?text=${encodeURIComponent(text)}&voice=Adult%20Male%20%232%2C%20American%20English%20(TruVoice)&pitch=140&speed=157`;
                 ttsAudio.src = ttsUrl;
-                ttsAudio.style.display = 'block';  // Show the audio player
-                ttsAudio.play();
             })
             .catch(error => {
                 // Handle any errors
