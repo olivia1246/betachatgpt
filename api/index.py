@@ -41,7 +41,6 @@ HTML_TEMPLATE = '''
             // Clear the chat box and set the "Generating..." message
             var chatBox = document.getElementById('chat-box');
             chatBox.value = "";  // Clear previous conversation
-            chatBox.value += "Generating...\\n";
 
             // Disable the button and change the text to "Generating..."
             var askButton = document.getElementById('ask-button');
