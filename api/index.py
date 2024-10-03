@@ -3,7 +3,7 @@ from g4f.client import Client
 
 app = Flask(__name__)
 
-# Your HTML template with the minimalist design
+# Your HTML template with the minimalist design and TTS feature
 HTML_TEMPLATE = '''
 <html lang="en">
 <head>
@@ -23,6 +23,8 @@ HTML_TEMPLATE = '''
         <br>
         <br>
         <button id="ask-button" onclick="sendMessage()">Ask</button>
+        <br>
+        <audio id="tts-audio" controls style="display:none;"></audio> <!-- Hidden TTS Audio Player -->
         <div class="footer">
             <p><a href="/login">Log In</a>        <a href="/signup">Sign Up</a>        <a href="/preferences">Preferences</a>        <a href="http://frogfind.com/read.php?a=https://en.wikipedia.org/wiki/ChatGPT">About Us</a></p>
             <p>ChatGPT 1.0 is still in beta and may make mistakes. Please consider double-checking important information.</p>
@@ -41,6 +43,7 @@ HTML_TEMPLATE = '''
             // Clear the chat box and set the "Generating..." message
             var chatBox = document.getElementById('chat-box');
             chatBox.value = "";  // Clear previous conversation
+            chatBox.value += "Generating...\\n";
 
             // Disable the button and change the text to "Generating..."
             var askButton = document.getElementById('ask-button');
@@ -65,6 +68,13 @@ HTML_TEMPLATE = '''
                 // Reset the button to "Ask" and enable it
                 askButton.textContent = "Ask";
                 askButton.disabled = false;
+
+                // Play the response using Google TTS
+                var ttsAudio = document.getElementById('tts-audio');
+                var ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=en&client=tw-ob&q=${encodeURIComponent(data.response)}`;
+                ttsAudio.src = ttsUrl;
+                ttsAudio.style.display = 'block';  // Show the audio player
+                ttsAudio.play();
             })
             .catch(error => {
                 // Handle any errors
