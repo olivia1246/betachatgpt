@@ -103,7 +103,7 @@ def chat():
     # Use g4f client to call the GPT model
     client = Client()
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": full_input}]
     )
 
