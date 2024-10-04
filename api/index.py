@@ -35,46 +35,36 @@ HTML_TEMPLATE = '''
     <script src="https://cdn.jsdelivr.net/npm/sam-js@latest"></script>
     
     <script>
-        // Initialize SAM
         let sam = new SamJs();
-        let audioContext; // Holds the audio context for playback
+        let currentSpeech;  // Holds the current speech for stopping
 
-        // Initialize the chat box with an empty message
         document.getElementById('chat-box').value = "";
 
         function sendMessage() {
-            var input = document.getElementById('user-input').value;
+            let input = document.getElementById('user-input').value;
             if (!input) return;
 
             // Stop any current TTS playback
             stopTTS();
 
-            // Clear the chat box and set the "Generating..." message
-            var chatBox = document.getElementById('chat-box');
-            chatBox.value = "";  // Clear previous conversation
-            chatBox.value += "Generating...\\n";
+            let chatBox = document.getElementById('chat-box');
+            chatBox.value = "Generating...\n";
 
-            // Disable the button and change the text to "Generating..."
-            var askButton = document.getElementById('ask-button');
+            let askButton = document.getElementById('ask-button');
             askButton.disabled = true;
             askButton.textContent = "Generating...";
 
-            // Send the user input to the server
             fetch('/chat', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ input: input })
             })
             .then(response => response.json())
             .then(data => {
-                // Display the generated response in the chat box
-                chatBox.value = data.response + "\\n";  // Append the bot's response
-                document.getElementById('user-input').value = '';  // Clear the user input
-                chatBox.scrollTop = chatBox.scrollHeight;  // Scroll to the bottom of the chat
+                chatBox.value = data.response + "\n";
+                document.getElementById('user-input').value = '';
+                chatBox.scrollTop = chatBox.scrollHeight;
 
-                // Reset the button to "Ask" and enable it
                 askButton.textContent = "Ask";
                 askButton.disabled = false;
 
@@ -82,30 +72,26 @@ HTML_TEMPLATE = '''
                 playTTS(data.response);
             })
             .catch(error => {
-                // Handle any errors
-                var errorMessage = "Error occurred. Please try again.";
-                chatBox.value = errorMessage + "\\n";
+                chatBox.value = "Error occurred. Please try again.\n";
                 askButton.textContent = "Ask";
                 askButton.disabled = false;
 
                 // Play the error message using SAM TTS
-                playTTS(errorMessage);
+                playTTS("Error occurred. Please try again.");
             });
         }
 
         function playTTS(text) {
-            // Stop any current TTS before starting new speech
-            stopTTS();
+            stopTTS();  // Stop any ongoing playback
 
-            // Use SAM.js to generate speech for the response
-            audioContext = sam.speak(text);
+            currentSpeech = sam.speak(text);
+            currentSpeech.catch(() => {});  // Handle cases where playback fails
         }
 
         function stopTTS() {
-            // If there's an active audio context, stop it
-            if (audioContext) {
-                audioContext.close();  // Stop the current audio playback
-                audioContext = null;   // Clear the context
+            if (currentSpeech) {
+                currentSpeech.abort();  // Stop the current speech playback
+                currentSpeech = null;  // Reset the currentSpeech variable
             }
         }
     </script>
