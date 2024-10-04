@@ -37,7 +37,7 @@ HTML_TEMPLATE = '''
     <script>
         // Initialize SAM
         let sam = new SamJs();
-        let isSpeaking = false; // Flag to track speaking status
+        let audioContext; // Holds the audio context for playback
 
         // Initialize the chat box with an empty message
         document.getElementById('chat-box').value = "";
@@ -98,17 +98,14 @@ HTML_TEMPLATE = '''
             stopTTS();
 
             // Use SAM.js to generate speech for the response
-            isSpeaking = true;
-            sam.speak(text).then(() => {
-                isSpeaking = false; // Mark as not speaking after playback finishes
-            });
+            audioContext = sam.speak(text);
         }
 
         function stopTTS() {
-            // If SAM is speaking, stop the current speech by clearing the flag
-            if (isSpeaking) {
-                sam.stop(); // Stops the current speech generation
-                isSpeaking = false; // Reset the flag
+            // If there's an active audio context, stop it
+            if (audioContext) {
+                audioContext.close();  // Stop the current audio playback
+                audioContext = null;   // Clear the context
             }
         }
     </script>
