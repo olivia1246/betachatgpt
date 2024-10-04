@@ -92,63 +92,76 @@ HTML_TEMPLATE = '''
             });
         }
 
-        // Function to split text into smaller chunks for SAM TTS
-function splitTextIntoChunks(text, maxLength = 100) {
-    let chunks = [];
-    let currentChunk = '';
+        // Split text into chunks based on a maximum length
+        function splitTextIntoChunks(text, maxLength = 100) {
+            let chunks = [];
+            let currentChunk = '';
 
-    const words = text.split(' ');
-    for (let i = 0; i < words.length; i++) {
-        if ((currentChunk.length + words[i].length + 1) <= maxLength) {
-            currentChunk += (currentChunk ? ' ' : '') + words[i];
-        } else {
-            chunks.push(currentChunk);
-            currentChunk = words[i];
+            const words = text.split(' ');
+            for (let i = 0; i < words.length; i++) {
+                if ((currentChunk.length + words[i].length + 1) <= maxLength) {
+                    currentChunk += (currentChunk ? ' ' : '') + words[i];
+                } else {
+                    if (currentChunk) chunks.push(currentChunk); // Push non-empty chunk
+                    currentChunk = words[i];
+                }
+            }
+            if (currentChunk) chunks.push(currentChunk); // Push remaining chunk
+            return chunks.filter(chunk => chunk.length > 0); // Ensure no empty chunks
         }
-    }
-    if (currentChunk) chunks.push(currentChunk);
-    return chunks;
-}
 
-function playTTS(text) {
-    stopTTS();  // Stop any ongoing playback
+        // Function to play the TTS for the given text
+        function playTTS(text) {
+            stopTTS(); // Stop any ongoing playback
 
-    let chunks = splitTextIntoChunks(text);  // Split the text into manageable chunks
-    playNextChunk(chunks, 0);  // Start playing the chunks one by one
-}
-
-function playNextChunk(chunks, index) {
-    if (index >= chunks.length) {
-        currentAudioContext = null;
-        return;  // All chunks have been played
-    }
-
-    let chunk = chunks[index];
-    console.log("Playing chunk:", chunk);
-
-    // Create a new AudioContext and play the speech for this chunk
-    currentAudioContext = sam.speak(chunk);
-    currentAudioContext.then(() => {
-        // When the current chunk finishes, play the next one
-        playNextChunk(chunks, index + 1);
-    }).catch((error) => {
-        console.log("Error during speech playback:", error);
-        // Handle playback error gracefully, clear the audio context
-        currentAudioContext = null;
-    });
-}
-
-function stopTTS() {
-    // Stop the current AudioContext if it exists and is playing
-    if (currentAudioContext && typeof currentAudioContext.abort === 'function') {
-        try {
-            currentAudioContext.abort();  // Attempt to abort the audio
-        } catch (error) {
-            console.log("Failed to stop audio:", error);
+            let chunks = splitTextIntoChunks(text); // Split the text into manageable chunks
+            playNextChunk(chunks, 0); // Start playing the chunks one by one
         }
-    }
-    currentAudioContext = null;  // Clear the context whether it worked or not
-}
+
+        // Function to play each chunk in sequence
+        function playNextChunk(chunks, index) {
+            if (index >= chunks.length) {
+                console.log("All chunks played.");
+                currentAudioContext = null; // Reset the audio context
+                return; // All chunks have been played
+            }
+
+            let chunk = chunks[index];
+            console.log("Playing chunk:", chunk);
+
+            // Play the speech for this chunk using SAM
+            currentAudioContext = sam.speak(chunk);
+            currentAudioContext.then(() => {
+                // When the current chunk finishes, play the next one
+                playNextChunk(chunks, index + 1);
+            }).catch((error) => {
+                console.log("Error during speech playback:", error);
+                currentAudioContext = null; // Reset on error
+                playNextChunk(chunks, index + 1); // Attempt to play the next chunk
+            });
+        }
+
+        // Function to stop TTS playback
+        function stopTTS() {
+            if (currentAudioContext && typeof currentAudioContext.abort === 'function') {
+                try {
+                    currentAudioContext.abort(); // Attempt to abort the audio
+                } catch (error) {
+                    console.log("Failed to stop audio:", error);
+                }
+            }
+            currentAudioContext = null; // Clear the context
+        }
+
+        // Event listener for the speak button
+        document.getElementById('speak-btn').addEventListener('click', () => {
+            const textInput = document.getElementById('text-input').value.trim();
+            if (textInput) {
+                playTTS(textInput); // Play TTS if input is not empty
+            } else {
+                console.log("No text provided.");
+            }
+        });
     </script>
 </body>
 </html>
