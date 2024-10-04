@@ -3,7 +3,7 @@ from g4f.client import Client
 
 app = Flask(__name__)
 
-# Your HTML template with the minimalist design and TTS feature
+# Your HTML template with SAM TTS integration
 HTML_TEMPLATE = '''
 <html lang="en">
 <head>
@@ -24,28 +24,37 @@ HTML_TEMPLATE = '''
         <br>
         <button id="ask-button" onclick="sendMessage()">Ask</button>
         <br>
-        <audio id="tts-audio" controls style=""></audio>
         <div class="footer">
             <p><a href="/login">Log In</a>        <a href="/signup">Sign Up</a>        <a href="/preferences">Preferences</a>        <a href="http://frogfind.com/read.php?a=https://en.wikipedia.org/wiki/ChatGPT">About Us</a></p>
             <p>ChatGPT 1.0 is still in beta and may make mistakes. Please consider double-checking important information.</p>
-            <p>&copy; 2006 OpenAI - Created by <a href="https://www.youtube.com/watch?v=IfTBofqT9Kw&t=1s">Faked Vault</a> - Recreation by <a href="https://github.com/olivia1246">olivia1246</a> - Voice by <a href="https://www.tetyys.com/SAPI4/">SAPI4</a></p>
+            <p>&copy; 2006 OpenAI - Created by <a href="https://www.youtube.com/watch?v=IfTBofqT9Kw&t=1s">Faked Vault</a> - Recreation by <a href="https://github.com/olivia1246">olivia1246</a></p>
         </div>
   </center>
-        
+
+    <!-- Include SAM JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/sam-js@latest"></script>
+    
     <script>
+        // Initialize SAM
+        let sam = new SamJs();
+
         // Initialize the chat box with an empty message
         document.getElementById('chat-box').value = "";
+
         function sendMessage() {
             var input = document.getElementById('user-input').value;
             if (!input) return;
+
             // Clear the chat box and set the "Generating..." message
             var chatBox = document.getElementById('chat-box');
             chatBox.value = "";  // Clear previous conversation
             chatBox.value += "Generating...\\n";
+
             // Disable the button and change the text to "Generating..."
             var askButton = document.getElementById('ask-button');
             askButton.disabled = true;
             askButton.textContent = "Generating...";
+
             // Send the user input to the server
             fetch('/chat', {
                 method: 'POST',
@@ -60,13 +69,13 @@ HTML_TEMPLATE = '''
                 chatBox.value = data.response + "\\n";  // Append the bot's response
                 document.getElementById('user-input').value = '';  // Clear the user input
                 chatBox.scrollTop = chatBox.scrollHeight;  // Scroll to the bottom of the chat
+
                 // Reset the button to "Ask" and enable it
                 askButton.textContent = "Ask";
                 askButton.disabled = false;
-                // Play the response using SAPI4
-                var ttsAudio = document.getElementById('tts-audio');
-                var ttsUrl = `https://www.tetyys.com/SAPI4/SAPI4?text=${encodeURIComponent(text)}&voice=Adult%20Male%20%232%2C%20American%20English%20(TruVoice)&pitch=140&speed=157`;
-                ttsAudio.src = ttsUrl;
+
+                // Play the response using SAM TTS
+                playTTS(data.response);
             })
             .catch(error => {
                 // Handle any errors
@@ -74,6 +83,11 @@ HTML_TEMPLATE = '''
                 askButton.textContent = "Ask";
                 askButton.disabled = false;
             });
+        }
+
+        function playTTS(text) {
+            // Use SAM.js to generate speech for the response
+            sam.speak(text);
         }
     </script>
 </body>
@@ -103,7 +117,7 @@ def chat():
     # Use g4f client to call the GPT model
     client = Client()
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4o-mini",
         messages=[{"role": "user", "content": full_input}]
     )
 
