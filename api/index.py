@@ -3,7 +3,7 @@ from g4f.client import Client
 
 app = Flask(__name__)
 
-# Your HTML template with SAM TTS integration
+# Your HTML template with updated TTS handling
 HTML_TEMPLATE = '''
 <html lang="en">
 <head>
@@ -37,7 +37,7 @@ HTML_TEMPLATE = '''
     <script>
         // Initialize SAM
         let sam = new SamJs();
-        let currentAudio = null; // Variable to keep track of the current audio
+        let isSpeaking = false; // Flag to track speaking status
 
         // Initialize the chat box with an empty message
         document.getElementById('chat-box').value = "";
@@ -52,6 +52,7 @@ HTML_TEMPLATE = '''
             // Clear the chat box and set the "Generating..." message
             var chatBox = document.getElementById('chat-box');
             chatBox.value = "";  // Clear previous conversation
+            chatBox.value += "Generating...\\n";
 
             // Disable the button and change the text to "Generating..."
             var askButton = document.getElementById('ask-button');
@@ -97,14 +98,17 @@ HTML_TEMPLATE = '''
             stopTTS();
 
             // Use SAM.js to generate speech for the response
-            currentAudio = sam.speak(text);
+            isSpeaking = true;
+            sam.speak(text).then(() => {
+                isSpeaking = false; // Mark as not speaking after playback finishes
+            });
         }
 
         function stopTTS() {
-            // Stop the current audio if it's playing
-            if (currentAudio) {
-                currentAudio.pause(); // Pause the audio
-                currentAudio = null;  // Reset the audio reference
+            // If SAM is speaking, stop the current speech by clearing the flag
+            if (isSpeaking) {
+                sam.stop(); // Stops the current speech generation
+                isSpeaking = false; // Reset the flag
             }
         }
     </script>
