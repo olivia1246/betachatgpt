@@ -93,7 +93,7 @@ HTML_TEMPLATE = '''
         }
 
         // Function to split text into smaller chunks for SAM TTS
-function splitTextIntoChunks(text, maxLength = 200) {
+function splitTextIntoChunks(text, maxLength = 100) {
     let chunks = [];
     let currentChunk = '';
 
