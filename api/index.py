@@ -93,7 +93,7 @@ HTML_TEMPLATE = '''
         }
 
         // Split text into chunks based on a maximum length
-        function splitTextIntoChunks(text, maxLength = 100) {
+        function splitTextIntoChunks(text, maxLength = 200) {
             let chunks = [];
             let currentChunk = '';
 
