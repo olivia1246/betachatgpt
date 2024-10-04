@@ -37,6 +37,7 @@ HTML_TEMPLATE = '''
     <script>
         // Initialize SAM
         let sam = new SamJs();
+        let currentAudio = null; // Variable to keep track of the current audio
 
         // Initialize the chat box with an empty message
         document.getElementById('chat-box').value = "";
@@ -44,6 +45,9 @@ HTML_TEMPLATE = '''
         function sendMessage() {
             var input = document.getElementById('user-input').value;
             if (!input) return;
+
+            // Stop any current TTS playback
+            stopTTS();
 
             // Clear the chat box and set the "Generating..." message
             var chatBox = document.getElementById('chat-box');
@@ -78,15 +82,30 @@ HTML_TEMPLATE = '''
             })
             .catch(error => {
                 // Handle any errors
-                chatBox.value = "Error occurred. Please try again.\\n";
+                var errorMessage = "Error occurred. Please try again.";
+                chatBox.value = errorMessage + "\\n";
                 askButton.textContent = "Ask";
                 askButton.disabled = false;
+
+                // Play the error message using SAM TTS
+                playTTS(errorMessage);
             });
         }
 
         function playTTS(text) {
+            // Stop any current TTS before starting new speech
+            stopTTS();
+
             // Use SAM.js to generate speech for the response
-            sam.speak(text);
+            currentAudio = sam.speak(text);
+        }
+
+        function stopTTS() {
+            // Stop the current audio if it's playing
+            if (currentAudio) {
+                currentAudio.pause(); // Pause the audio
+                currentAudio = null;  // Reset the audio reference
+            }
         }
     </script>
 </body>
