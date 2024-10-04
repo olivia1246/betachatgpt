@@ -152,16 +152,6 @@ HTML_TEMPLATE = '''
             }
             currentAudioContext = null; // Clear the context
         }
-
-        // Event listener for the speak button
-        document.getElementById('speak-btn').addEventListener('click', () => {
-            const textInput = document.getElementById('text-input').value.trim();
-            if (textInput) {
-                playTTS(textInput); // Play TTS if input is not empty
-            } else {
-                console.log("No text provided.");
-            }
-        });
     </script>
 </body>
 </html>
