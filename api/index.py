@@ -79,7 +79,6 @@ HTML_TEMPLATE = '''
             .catch(error => {
                 // Handle any errors
                 chatBox.value = "Error occurred. Please try again.\\n";
-                playTTS(chatbox.Value);
                 askButton.textContent = "Ask";
                 askButton.disabled = false;
             });
