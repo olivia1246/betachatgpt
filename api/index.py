@@ -37,7 +37,7 @@ HTML_TEMPLATE = '''
     <script>
         // Initialize SAM
         let sam = new SamJs();
-        let currentSpeech;  // Holds the current speech for stopping
+        let currentAudioContext;  // Holds the current AudioContext for stopping
 
         // Initialize the chat box with an empty message
         document.getElementById('chat-box').value = "";
@@ -95,15 +95,25 @@ HTML_TEMPLATE = '''
         function playTTS(text) {
             stopTTS();  // Stop any ongoing playback
 
-            currentSpeech = sam.speak(text);
-            currentSpeech.catch(() => {});  // Handle cases where playback fails
+            // Create a new AudioContext and play the speech
+            currentAudioContext = sam.speak(text);
+            currentAudioContext.catch((error) => {
+                console.log("Error during speech playback:", error);
+                // Handle playback error gracefully, clear the audio context
+                currentAudioContext = null;
+            });
         }
 
         function stopTTS() {
-            if (currentSpeech) {
-                currentSpeech.abort();  // Stop the current speech playback
-                currentSpeech = null;  // Reset the currentSpeech variable
+            // Stop the current AudioContext if it exists and is playing
+            if (currentAudioContext && typeof currentAudioContext.abort === 'function') {
+                try {
+                    currentAudioContext.abort();  // Attempt to abort the audio
+                } catch (error) {
+                    console.log("Failed to stop audio:", error);
+                }
             }
+            currentAudioContext = null;  // Clear the context whether it worked or not
         }
     </script>
 </body>
